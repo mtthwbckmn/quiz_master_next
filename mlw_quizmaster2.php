@@ -261,6 +261,31 @@ class MLWQuizMasterNext
 	}
 }
 
+// Create a helper function for easy SDK access.
+function qmn_fs() {
+	global $qmn_fs;
+	if ( ! isset( $qmn_fs ) ) {
+		// Include Freemius SDK.
+		require_once dirname(__FILE__) . '/freemius/start.php';
+
+		$qmn_fs = fs_dynamic_init( array(
+			'id'               => '36',
+			'slug'             => 'quiz-master-next',
+			'menu_slug'        => __FILE__,
+			'public_key'       => 'pk_2237bb4bfc41915b16c44c3ccd0d7',
+			'is_live'          => true,
+			'is_premium'       => false,
+			'is_org_compliant' => true,
+			'has_addons'       => true,
+		) );
+	}
+
+	return $qmn_fs;
+}
+
+// Init Freemius.
+qmn_fs();
+
 $mlwQuizMasterNext = new MLWQuizMasterNext();
 register_activation_hook( __FILE__, 'mlw_quiz_activate');
 ?>
