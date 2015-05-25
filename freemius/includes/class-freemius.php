@@ -322,6 +322,13 @@
 		}
 
 		private static $_statics_loaded = false;
+
+		/**
+		 * Load static resources.
+		 *
+		 * @author Vova Feldman (@svovaf)
+		 * @since 1.0.1
+		 */
 		private static function _load_required_static() {
 			if (self::$_statics_loaded)
 				return;
@@ -977,8 +984,9 @@
 		function _add_pending_activation_notice()
 		{
 			$current_user = wp_get_current_user();
-			$this->_admin_notices->add(
+			$this->_admin_notices->add_sticky(
 				sprintf( __( 'You should receive an activation email for %s to your mailbox at %s. Please make sure you click the activation button in that email to complete the install.', WP_FS__SLUG ), '<b>' . $this->get_plugin_name() . '</b>', '<b>' . $current_user->user_email . '</b>' ),
+				'activation_pending',
 				'Thanks!'
 			);
 		}
@@ -1018,14 +1026,20 @@
 							'update-nag'
 						);
 					}
-				} else if ( $this->_storage->get( 'show_pending_activation_notice', false ) ) {
-					$this->_add_pending_activation_notice();
 				}
 			}
 
 			$this->_add_upgrade_action_link();
 		}
 
+		/**
+		 * Return current page's URL.
+		 *
+		 * @author Vova Feldman (@svovaf)
+		 * @since 1.0.7
+		 *
+		 * @return string
+		 */
 		function current_page_url() {
 			$url = 'http';
 
@@ -1041,12 +1055,20 @@
 				$url .= $_SERVER["SERVER_NAME"] . $_SERVER["REQUEST_URI"];
 			}
 
-			return $url;
+			return esc_url($url);
 		}
 
+		/**
+		 * Check if the current page is the plugin's main admin settings page.
+		 *
+		 * @author Vova Feldman (@svovaf)
+		 * @since 1.0.7
+		 *
+		 * @return bool
+		 */
 		function _is_plugin_page()
 		{
-			return ($this->current_page_url() == $this->_get_admin_page_url());
+			return (is_admin() && $_REQUEST['page'] === $this->_menu_slug);
 		}
 
 		/**
@@ -1059,7 +1081,7 @@
 		 *
 		 */
 		function _admin_menu_action() {
-			if ( $this->_is_plugin_page() && $this->is_activation_mode() ) {
+			if ( $this->is_activation_mode() ) {
 				$this->_override_plugin_menu_with_activation();
 			} else {
 				// If not registered try to install user.
@@ -1205,6 +1227,12 @@
 			$this->get_api_site_scope()->call( '/', 'put', array( 'is_active' => false, 'is_uninstalled' => true ) );
 		}
 
+		/**
+		 * Uninstall plugin hook. Called only when connected his account with Freemius for active sites tracking.
+		 *
+		 * @author Vova Feldman (@svovaf)
+		 * @since 1.0.2
+		 */
 		public static function _uninstall_plugin_hook() {
 			self::_load_required_static();
 
@@ -1226,6 +1254,14 @@
 
 		/* Plugin Information
 		------------------------------------------------------------------------------------------------------------------*/
+		/**
+		 * Return plugin data.
+		 *
+		 * @author Vova Feldman (@svovaf)
+		 * @since 1.0.1
+		 *
+		 * @return array
+		 */
 		function get_plugin_data() {
 			if ( ! isset( $this->_plugin_data ) ) {
 				if ( ! function_exists( 'get_plugins' ) ) {
@@ -1238,6 +1274,12 @@
 			return $this->_plugin_data;
 		}
 
+		/**
+		 * @author Vova Feldman (@svovaf)
+		 * @since 1.0.1
+		 *
+		 * @return string Plugin slug.
+		 */
 		function get_slug()
 		{
 			return $this->_slug;
@@ -1569,21 +1611,28 @@
 			return false;
 		}
 
+		/**
+		 * Get site's plan ID.
+		 *
+		 * @author Vova Feldman (@svovaf)
+		 * @since 1.0.2
+		 *
+		 * @return number
+		 */
 		function get_plan_id() {
 			return $this->_site->plan->id;
 		}
 
+		/**
+		 * Get site's plan title.
+		 *
+		 * @author Vova Feldman (@svovaf)
+		 * @since 1.0.2
+		 *
+		 * @return string
+		 */
 		function get_plan_title() {
 			return $this->_site->plan->title;
-		}
-
-		function update_account($user_id, $user_email, $site_id)
-		{
-			$this->_user->id = $user_id;
-			$this->_user->email = $user_email;
-			$this->_site->user_id = $user_id;
-			$this->_site->id = $site_id;
-			$this->_store_account();
 		}
 
 		/* Licensing
@@ -1889,17 +1938,43 @@
 			return FS_Plan_Manager::has_free_plan($this->_plans);
 		}
 
+		/**
+		 * Check if feature supported with current site's plan.
+		 *
+		 * @author Vova Feldman (@svovaf)
+		 * @since  1.0.1
+		 *
+		 * @todo IMPLEMENT
+		 *
+		 * @param number $feature_id
+		 *
+		 * @throws \Exception
+		 */
 		function is_feature_supported($feature_id)
 		{
 			throw new Exception('not implemented');
 		}
 
+		/**
+		 * @author Vova Feldman (@svovaf)
+		 * @since  1.0.1
+		 *
+		 * @return bool Is running in SSL/HTTPS
+		 */
 		function is_ssl() {
 
 			return WP_FS__IS_HTTPS;
 
 		}
 
+		/**
+		 * Check if running in HTTPS and if site's plan matching the specified plan.
+		 *
+		 * @param string $plan
+		 * @param bool   $exact
+		 *
+		 * @return bool
+		 */
 		function is_ssl_and_plan( $plan, $exact = false ) {
 			return ( $this->is_ssl() && $this->is_plan( $plan, $exact ) );
 		}
@@ -1932,10 +2007,9 @@
 		 * @return string
 		 */
 		function _get_admin_page_url($page = '', $params = array()) {
-			return add_query_arg(
-				$params,
-				menu_page_url( trim( "{$this->_menu_slug}-{$page}", '-' ), false )
-			);
+			return add_query_arg( array_merge( $params, array(
+				'page' => trim( "{$this->_menu_slug}-{$page}", '-' )
+			) ), admin_url( 'admin.php', 'admin' ) );
 		}
 
 		/**
@@ -2214,6 +2288,12 @@
 			$submenu[$menu_slug] = array();
 		}
 
+		/**
+		 * Remove plugin's all admin menu items & pages, and replace with activation page.
+		 *
+		 * @author Vova Feldman (@svovaf)
+		 * @since  1.0.1
+		 */
 		private function _override_plugin_menu_with_activation()
 		{
 			$menu = $this->_find_plugin_main_menu();
@@ -2319,6 +2399,12 @@
 			return false;
 		}
 
+		/**
+		 * Install plugin with new user information after approval.
+		 *
+		 * @author Vova Feldman (@svovaf)
+		 * @since  1.0.7
+		 */
 		function _install_with_new_user() {
 			if ( $this->is_registered() ) {
 				return;
@@ -2349,11 +2435,25 @@
 
 					$this->_set_account( $user, $site );
 					$this->_sync_plans();
+
+					if ($this->is_pending_activation())
+					{
+						// Remove pending activation sticky notice (if still exist).
+						$this->_admin_notices->remove_sticky('activation_pending');
+
+						// Remove plugin from pending activation mode.
+						unset($this->_storage->is_pending_activation);
+
+						$this->_admin_notices->add_sticky(
+							sprintf( __( '%s activation was successfully completed.', WP_FS__SLUG ), '<b>' . $this->get_plugin_name() . '</b>' ),
+							'activation_complete'
+						);
+					}
 				} else if ( fs_request_has( 'pending_activation' ) ) {
 					// Install must be activated via email since
 					// user with the same email already exist.
 					$this->_storage->is_pending_activation = true;
-					$this->_storage->show_pending_activation_notice = true;
+					$this->_add_pending_activation_notice();
 				}
 
 				if ( fs_redirect( $this->_get_admin_page_url() ) ) {
@@ -2373,7 +2473,7 @@
 				return;
 			}
 
-			if ( fs_request_is_action( 'activate_existing' ) && fs_request_is_post() ) {
+			if ( fs_request_is_action( $this->_slug . '_activate_existing' ) && fs_request_is_post() ) {
 				check_admin_referer( 'activate_existing_' . $this->_plugin->public_key );
 				// Get current logged WP user.
 				$current_user = wp_get_current_user();
@@ -3252,7 +3352,7 @@
 			if ( ! isset( $licenses->error ) ) {
 				$this->_update_licenses( $licenses, $addon->slug );
 
-				if ( FS_License_Manager::has_premium_license($licenses) ) {
+				if ( !$this->is_addon_installed($addon->slug) && FS_License_Manager::has_premium_license($licenses) ) {
 					$plans_result = $this->get_api_site_or_plugin_scope()->get("/addons/{$addon_id}/plans.json");
 
 					if (!isset($plans_result->error)) {
@@ -3427,8 +3527,9 @@
 			$this->_store_account();
 
 			if ( ! $background ) {
-				$this->_admin_notices->add(
+				$this->_admin_notices->add_sticky(
 					sprintf( __( 'Your license for %s was successfully activated, %sdownload our latest %s version now%s.', WP_FS__SLUG ), '<i>' . $this->get_plugin_name() . '</i>', '<a href="' . $this->get_account_url( 'download_latest' ) . '">', $this->_site->plan->title, '</a>' ),
+					'license_activated',
 					__( 'Ye-ha!', WP_FS__SLUG )
 				);
 			}

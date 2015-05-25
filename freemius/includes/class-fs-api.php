@@ -37,11 +37,8 @@
 		private $_api;
 
 		/**
-		 * @var Freemius
-		 * @since 1.0.4
+		 * @var string
 		 */
-		private $_fs;
-
 		private $_slug;
 
 		/**
@@ -194,7 +191,7 @@
 			$cache_key = $this->get_cache_key($path);
 
 			// Always flush during development.
-			if (WP_FS__DEV_MODE || !$this->_fs->is_live())
+			if (WP_FS__DEV_MODE || $this->_api->IsSandbox())
 				$flush = true;
 
 			// Get result from cache.

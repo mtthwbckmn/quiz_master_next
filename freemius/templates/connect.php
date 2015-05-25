@@ -35,7 +35,7 @@
 				<object data="//plugins.svn.wordpress.org/<?php echo $slug ?>/assets/icon-128x128.jpg" type="image/png">
 					<object data="//plugins.svn.wordpress.org/<?php echo $slug ?>/assets/icon-256x256.png" type="image/png">
 						<object data="//plugins.svn.wordpress.org/<?php echo $slug ?>/assets/icon-256x256.jpg" type="image/png">
-					<img src="//wimg.freemius.com/plugin-icon.png" />
+							<img src="//wimg.freemius.com/plugin-icon.png" />
 						</object>
 					</object>
 				</object>
@@ -53,7 +53,7 @@
 				'<b>' . $current_user->user_login . '</b>',
 				'<a href="' . get_site_url() . '" target="_blank">' . $site_url . '</a>',
 				'<a href="https://freemius.com/wordpress/" target="_blank">freemius.com</a>'
-				)
+			)
 			?></p>
 	</div>
 	<div class="fs-actions">
@@ -63,7 +63,7 @@
 			<form action="" method="POST">
 				<input type="hidden" name="fs_action" value="<?php echo $slug ?>_activate_existing">
 				<?php wp_nonce_field('activate_existing_' . $fs->get_public_key()) ?>
-				<input type="submit" class="button button-primary" tabindex="1" value="<?php _e('Allow & Continue', WP_FS__SLUG) ?> &nbsp;&#10140;" />
+				<button class="button button-primary" tabindex="1" type="submit"><?php _e('Allow & Continue', WP_FS__SLUG) ?> &nbsp;&#10140;</button>
 			</form>
 		<?php else : ?>
 			<form method="post" action="<?php echo WP_FS__ADDRESS ?>/action/service/user/install/">
@@ -95,7 +95,7 @@
 				<?php foreach ($params as $name => $value) : ?>
 					<input type="hidden" name="<?php echo $name ?>" value="<?php echo esc_attr($value) ?>">
 				<?php endforeach ?>
-				<button class="button button-primary" tabindex="1"><!--<i class="dashicons dashicons-yes"></i> --><?php _e('Allow & Continue', WP_FS__SLUG) ?> &nbsp;&#10140;</button>
+				<button class="button button-primary" tabindex="1" type="submit"><?php _e('Allow & Continue', WP_FS__SLUG) ?> &nbsp;&#10140;</button>
 			</form>
 		<?php endif ?>
 	</div>
@@ -133,6 +133,10 @@
 </div>
 <script type="text/javascript">
 	(function($){
+		$('.button.button-primary').on('click', function(){
+			$(document.body).css({'cursor':'wait'});
+			$(this).html('Activating...').css({'cursor':'wait'});
+		});
 		$('.fs-permissions .fs-trigger').on('click', function(){
 			$('.fs-permissions').toggleClass('fs-open');
 		});
