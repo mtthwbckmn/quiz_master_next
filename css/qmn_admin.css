@@ -2,10 +2,6 @@
 Quizzes/Surveys Page
 *********************/
 
-.qsm-quizes-page .widefat td {
-  font-size: 16px !important;
-}
-
 .qsm-quizzes-page-content {
   display: flex;
   flex-direction: column;
@@ -38,24 +34,12 @@ Quizzes/Surveys Page
   padding: 10px 5px;
 }
 
-.qsm-edit-name {
-  font-size: 12px !important;
-}
-
-.qsm-action-link {
-  font-size: 14px !important;
-}
-
 .qsm-action-links:hover {
   background-color: black;
 }
 
 .qsm-action-link-delete {
   color: red !important;
-}
-
-.qsm-dialog-form {
-
 }
 
 .qsm-dialog-form label {
